@@ -1,6 +1,7 @@
 package domain.report.entity;
 
 import domain.admin.entity.Admin;
+import domain.image.entity.Image;
 import domain.report.enums.ReportStatus;
 import domain.user.entity.User;
 import jakarta.persistence.*;
@@ -12,6 +13,8 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -28,7 +31,7 @@ public class Report {
     private User user;
 
     private String location;
-    private String imageUrl;
+
     private String reason;
 
     @Enumerated(EnumType.STRING)
@@ -41,9 +44,11 @@ public class Report {
     @LastModifiedDate
     private LocalDateTime updateAt;
 
-
     @ManyToOne
     @JoinColumn(name = "admin_id")
     private Admin admin;
+
+    @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Image> imageUrls = new ArrayList<>();
 }
 
