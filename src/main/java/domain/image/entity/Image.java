@@ -20,5 +20,5 @@ public class Image {
 
     @ManyToOne
     @JoinColumn(name = "report_id")
-    private Report reportId;
+    private Report report;
 }
