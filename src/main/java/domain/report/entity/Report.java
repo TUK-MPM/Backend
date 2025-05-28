@@ -39,10 +39,7 @@ public class Report {
 
     @CreatedDate
     @Column(updatable = false)
-    private LocalDateTime createAt;
-
-    @LastModifiedDate
-    private LocalDateTime updateAt;
+    private LocalDateTime createdAt;
 
     @ManyToOne
     @JoinColumn(name = "admin_id")

@@ -23,6 +23,6 @@ public class Admin {
 
     @CreatedDate
     @Column(updatable = false)
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
 }
 

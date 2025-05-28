@@ -35,7 +35,7 @@ public class Inquiries {
 
     @CreatedDate
     @Column(updatable = false)
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
 
     // TODO: 백엔드에서 날짜 자동처리 할 지, 프론트에서 request 하게 할 지 정해야 함
     private LocalDateTime respondedAt;
