@@ -1,6 +1,7 @@
 package com.zikk.backend.domain.report.service;
 
 import com.zikk.backend.domain.image.entity.Image;
+import com.zikk.backend.domain.report.dto.PatchReportRequest;
 import com.zikk.backend.domain.report.dto.ReportRequest;
 import com.zikk.backend.domain.report.dto.ReportResponse;
 import com.zikk.backend.domain.report.entity.Report;
@@ -11,9 +12,11 @@ import com.zikk.backend.domain.user.repository.UserRepository;
 import com.zikk.backend.global.S3Uploader;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 @Service
@@ -58,4 +61,53 @@ public class ReportService {
         Report savedReport = reportRepository.save(report);
         return new ReportResponse(savedReport.getReportId(), "신고가 정상적으로 접수되었습니다.");
     }
+
+    @Transactional
+    public ReportResponse patchReport(Long reportId, PatchReportRequest request) {
+        // 1. 기존 신고 조회
+        Report report = reportRepository.findById(reportId)
+                .orElseThrow(() -> new NoSuchElementException("해당 신고가 존재하지 않습니다."));
+
+        // 2. phone이 있으면 유저 검증 또는 가입
+        if (request.getPhone() != null) {
+            User user = userRepository.findByPhone(request.getPhone())
+                    .orElseGet(() -> {
+                        User newUser = new User();
+                        newUser.setPhone(request.getPhone());
+                        return userRepository.save(newUser);
+                    });
+            report.setUser(user);
+        }
+
+        // 3. address 수정
+        if (request.getAddress() != null) {
+            report.setLocation(request.getAddress());
+        }
+
+        // 4. type 수정
+        if (request.getType() != null) {
+            report.setReason(request.getType().name());
+        }
+
+        // 5. imageUrls 수정
+        if (request.getImageUrls() != null) {
+            report.getImageUrls().clear(); // 기존 이미지 삭제
+
+            for (String imageUrl : request.getImageUrls()) {
+                try (InputStream in = new URL(imageUrl).openStream()) {
+                    String uploadedUrl = s3Uploader.upload(in, UUID.randomUUID() + ".jpg", "report-images");
+
+                    Image image = new Image();
+                    image.setImageUrl(uploadedUrl);
+                    image.setReport(report);
+                    report.getImageUrls().add(image);
+                } catch (Exception e) {
+                    throw new RuntimeException("이미지 업로드 실패: " + imageUrl, e);
+                }
+            }
+        }
+
+        return new ReportResponse(report.getReportId(), "신고가 정상적으로 수정되었습니다.");
+    }
+
 }
