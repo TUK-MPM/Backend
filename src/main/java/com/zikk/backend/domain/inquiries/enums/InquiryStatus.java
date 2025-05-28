@@ -1,4 +1,4 @@
-package domain.inquiries.enums;
+package com.zikk.backend.domain.inquiries.enums;
 
 public enum InquiryStatus {
     WAITING,    // 답변 대기

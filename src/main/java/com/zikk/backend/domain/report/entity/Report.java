@@ -1,15 +1,14 @@
-package domain.report.entity;
+package com.zikk.backend.domain.report.entity;
 
-import domain.admin.entity.Admin;
-import domain.image.entity.Image;
-import domain.report.enums.ReportStatus;
-import domain.user.entity.User;
+import com.zikk.backend.domain.admin.entity.Admin;
+import com.zikk.backend.domain.image.entity.Image;
+import com.zikk.backend.domain.report.enums.ReportStatus;
+import com.zikk.backend.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;

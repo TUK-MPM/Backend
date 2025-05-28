@@ -1,8 +1,8 @@
-package domain.inquiries.entity;
+package com.zikk.backend.domain.inquiries.entity;
 
-import domain.admin.entity.Admin;
-import domain.inquiries.enums.InquiryStatus;
-import domain.user.entity.User;
+import com.zikk.backend.domain.admin.entity.Admin;
+import com.zikk.backend.domain.inquiries.enums.InquiryStatus;
+import com.zikk.backend.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

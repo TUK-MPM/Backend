@@ -1,4 +1,4 @@
-package domain.report.enums;
+package com.zikk.backend.domain.report.enums;
 
 public enum ReportStatus {
     PENDING,    // 대기
