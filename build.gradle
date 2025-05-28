@@ -39,6 +39,11 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // or jjwt-gson
 
+    // S3
+    implementation platform('software.amazon.awssdk:bom:2.25.16')
+    implementation 'software.amazon.awssdk:s3'
+    implementation 'software.amazon.awssdk:auth'
+
 }
 
 tasks.named('test') {
