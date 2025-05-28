@@ -1,6 +1,6 @@
-package domain.image.entity;
+package com.zikk.backend.domain.image.entity;
 
-import domain.report.entity.Report;
+import com.zikk.backend.domain.report.entity.Report;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

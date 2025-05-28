@@ -1,4 +1,4 @@
-package domain.admin.entity;
+package com.zikk.backend.domain.user.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -9,15 +9,18 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
+import static jakarta.persistence.GenerationType.*;
+
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
-public class Admin {
+public class User {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long adminId;
+    @Id
+    @GeneratedValue(strategy = IDENTITY)
+    private Long userId;
 
     private String phone;
 

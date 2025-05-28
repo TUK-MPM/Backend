@@ -1,6 +1,6 @@
-package domain.notice.entity;
+package com.zikk.backend.domain.notice.entity;
 
-import domain.admin.entity.Admin;
+import com.zikk.backend.domain.admin.entity.Admin;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
