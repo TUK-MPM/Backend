@@ -6,13 +6,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class NoticeListResponse {
 
-    private Content content;
+    private List<Content> content;
 
     private int totalPages;
     private boolean hasNext;
