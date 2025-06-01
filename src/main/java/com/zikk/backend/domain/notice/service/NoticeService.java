@@ -7,6 +7,7 @@ import com.zikk.backend.domain.notice.dto.NoticeListResponse;
 import com.zikk.backend.domain.notice.dto.NoticeRequest;
 import com.zikk.backend.domain.notice.dto.NoticeResponse;
 import com.zikk.backend.domain.notice.entity.Notice;
+import com.zikk.backend.domain.notice.enums.SortType;
 import com.zikk.backend.domain.notice.repository.NoticeRepository;
 import com.zikk.backend.domain.notice.vo.Content;
 import com.zikk.backend.global.JwtTokenProvider;
@@ -59,9 +60,19 @@ public class NoticeService {
         return new NoticeResponse(saved.getNotiId(), "공지사항이 정상적으로 등록되었습니다.");
     }
 
-    public NoticeListResponse getNoticeList(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<Notice> noticePage = noticeRepository.findAll(pageable);
+    public NoticeListResponse getNoticeList(int page, int size, String keyword, SortType sortType) {
+        Sort sort = switch (sortType) {
+            case VIEWS -> Sort.by(Sort.Direction.DESC, "views");
+            case LATEST -> Sort.by(Sort.Direction.DESC, "createdAt");
+        };
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Notice> noticePage;
+        if (keyword != null && !keyword.isBlank()) {
+            noticePage = noticeRepository.findByTitleContaining(keyword, pageable);
+        } else {
+            noticePage = noticeRepository.findAll(pageable);
+        }
 
         List<Content> contentList = noticePage.getContent().stream()
                 .map(n -> new Content(n.getNotiId(), n.getTitle(), n.getCreatedAt()))

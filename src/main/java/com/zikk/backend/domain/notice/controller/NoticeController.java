@@ -4,6 +4,7 @@ import com.zikk.backend.domain.notice.dto.NoticeDetailResponse;
 import com.zikk.backend.domain.notice.dto.NoticeListResponse;
 import com.zikk.backend.domain.notice.dto.NoticeRequest;
 import com.zikk.backend.domain.notice.dto.NoticeResponse;
+import com.zikk.backend.domain.notice.enums.SortType;
 import com.zikk.backend.domain.notice.service.NoticeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,9 +27,11 @@ public class NoticeController {
     @GetMapping
     public ResponseEntity<NoticeListResponse> getNoticeList(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false, defaultValue = "LATEST") SortType sortType
     ) {
-        return ResponseEntity.ok(noticeService.getNoticeList(page, size));
+        return ResponseEntity.ok(noticeService.getNoticeList(page, size, keyword, sortType));
     }
 
     @GetMapping("/{notiId}")
