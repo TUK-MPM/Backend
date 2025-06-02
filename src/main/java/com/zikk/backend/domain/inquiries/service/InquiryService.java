@@ -40,7 +40,7 @@ public class InquiryService {
      */
     public List<InquiryResponse> getMyInquiries(User user) {
         return inquiriesRepository.findAllByUser(user).stream()
-                .map(inquiry -> toResponse(inquiry, inquiry.getTitle()))
+                .map(inquiry -> toResponse(inquiry, "<User> 정상 조회 되었습니다."))
                 .collect(Collectors.toList());
     }
 
@@ -49,7 +49,7 @@ public class InquiryService {
      */
     public List<InquiryResponse> getAllInquiries() {
         return inquiriesRepository.findAll().stream()
-                .map(inquiry -> toResponse(inquiry, inquiry.getTitle()))
+                .map(inquiry -> toResponse(inquiry, "<Admin> 정상 조회 되었습니다."))
                 .collect(Collectors.toList());
     }
 
@@ -59,7 +59,7 @@ public class InquiryService {
     public InquiryResponse getInquiryById(Long inquId) {
         Inquiries inquiry = inquiriesRepository.findById(inquId)
                 .orElseThrow(() -> new NoSuchElementException("해당 문의가 존재하지 않습니다."));
-        return toResponse(inquiry, null);
+        return toResponse(inquiry, "<Admin> 상세 정상 조회 되었습니다.");
     }
 
     /*
@@ -69,17 +69,17 @@ public class InquiryService {
         Inquiries inquiry = inquiriesRepository.findById(inquId)
                 .filter(i -> i.getUser().getUserId().equals(user.getUserId()))
                 .orElseThrow(() -> new NoSuchElementException("해당 문의가 존재하지 않거나 권한이 없습니다."));
-        return toResponse(inquiry, null);
+        return toResponse(inquiry, "<User> 상세 정상 조회 되었습니다.");
     }
 
     /*
       6. 관리자: 답변 등록
      */
-    public InquiryResponse answerInquiry(Long inquId, Admin admin, String responseText) {
+    public InquiryResponse answerInquiry(Long inquId, Admin admin, InquiryResponse inquiryResponse) {
         Inquiries inquiry = inquiriesRepository.findById(inquId)
                 .orElseThrow(() -> new NoSuchElementException("해당 문의가 존재하지 않습니다."));
 
-        inquiry.setResponse(responseText);
+        inquiry.setResponse(inquiryResponse.getResponse());
         inquiry.setStatus(InquiryStatus.COMPLETED);
         inquiry.setRespondedAt(LocalDateTime.now());
         inquiry.setAdmin(admin);

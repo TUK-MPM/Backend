@@ -24,6 +24,7 @@ public class AuthService {
     public LoginResponse login(LoginRequest request) {
         String phone = request.getPhone();
 
+        // ✅ 관리자 존재 여부 확인
         Optional<Admin> adminOpt = adminRepository.findByPhone(phone);
         if (adminOpt.isPresent()) {
             Admin admin = adminOpt.get();
@@ -31,14 +32,15 @@ public class AuthService {
             return new LoginResponse(admin.getAdminId(), token);
         }
 
-        Optional<User> userOpt = userRepository.findByPhone(phone);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            String token = jwtTokenProvider.generateToken(user.getUserId(), "ROLE_USER");
-            return new LoginResponse(user.getUserId(), token);
-        }
+        // ✅ 유저 확인 or 새로 생성
+        User user = userRepository.findByPhone(phone).orElseGet(() -> {
+            User newUser = new User();
+            newUser.setPhone(phone);
+            return userRepository.save(newUser);
+        });
 
-        throw new UsernameNotFoundException("존재하지 않는 사용자입니다.");
+        String token = jwtTokenProvider.generateToken(user.getUserId(), "ROLE_USER");
+        return new LoginResponse(user.getUserId(), token);
     }
 }
 

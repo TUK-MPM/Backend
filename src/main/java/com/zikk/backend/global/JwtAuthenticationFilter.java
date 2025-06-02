@@ -4,17 +4,18 @@ import com.zikk.backend.domain.admin.entity.Admin;
 import com.zikk.backend.domain.admin.repository.AdminRepository;
 import com.zikk.backend.domain.user.entity.User;
 import com.zikk.backend.domain.user.repository.UserRepository;
-import com.zikk.backend.global.JwtTokenProvider;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -46,8 +47,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
 
                 if (principal != null) {
+                    // ✅ 권한 포함해서 등록
                     UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(principal, null, null);
+                            new UsernamePasswordAuthenticationToken(
+                                    principal,
+                                    null,
+                                    List.of(new SimpleGrantedAuthority(role))
+                            );
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
 

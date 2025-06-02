@@ -46,5 +46,9 @@ public class Report {
 
     @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Image> imageUrls = new ArrayList<>();
+
+    private String content; // 신고 내용 (선택 입력)
+    private String reply; // 관리자 답변
+    private LocalDateTime repliedAt; // 답변 시각
 }
 

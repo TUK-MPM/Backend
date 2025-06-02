@@ -28,6 +28,7 @@ public class SecurityConfig {
         http
                 .cors(Customizer.withDefaults()) // 🔹 CORS 활성화
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/user/login").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/user/**").hasRole("USER")
                         .anyRequest().permitAll()
