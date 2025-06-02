@@ -26,8 +26,12 @@ public class Inquiries {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(nullable = false)
     private String title;
+
+    @Column(nullable = false)
     private String content;
+
     private String response;
 
     @Enumerated(EnumType.STRING)

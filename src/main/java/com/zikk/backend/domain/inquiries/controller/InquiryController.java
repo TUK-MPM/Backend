@@ -76,11 +76,11 @@ public class InquiryController {
      // [PATCH] 관리자 답변 등록
     @PatchMapping("/{inquId}")
     public ResponseEntity<InquiryResponse> answerInquiry(@PathVariable Long inquId,
-                                                         @RequestBody String response) {
+                                                         @RequestBody InquiryResponse inquiryResponse) {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         if (principal instanceof Admin admin) {
-            InquiryResponse result = inquiryService.answerInquiry(inquId, admin, response);
+            InquiryResponse result = inquiryService.answerInquiry(inquId, admin, inquiryResponse);
             return ResponseEntity.ok(result);
         }
 
