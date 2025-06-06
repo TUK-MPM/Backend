@@ -181,6 +181,7 @@ public class ReportService {
                         .reportId(report.getReportId())
                         .reason(report.getReason())
                         .status(report.getStatus())
+                        .address(report.getLocation())
                         .createdAt(report.getCreatedAt())
                         .repliedAt(report.getRepliedAt())
                         .build())
