@@ -20,4 +20,5 @@ public class ReportResponse {
     private ReportStatus status;     // PENDING, APPROVED, REJECTED
     private LocalDateTime createdAt; // 생성 시각
     private LocalDateTime repliedAt; // 처리 시각 (nullable)
+    private String address;
 }
