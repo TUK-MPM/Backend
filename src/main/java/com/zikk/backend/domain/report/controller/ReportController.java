@@ -14,6 +14,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
 
 @RestController
@@ -25,16 +27,21 @@ public class ReportController {
     private final ReportService reportService;
 
     @PostMapping
-    public ResponseEntity<ReportResponse> createReport(@RequestBody ReportRequest request) {
-        ReportResponse response = reportService.createReport(request);
+    public ResponseEntity<ReportResponse> createReport(
+            @RequestPart("request") ReportRequest request, // JSON
+            @RequestPart(value = "images", required = false) List<MultipartFile> images // 이미지들
+    ) {
+        ReportResponse response = reportService.createReport(request, images);
         return ResponseEntity.ok(response);
     }
 
     @PatchMapping("/{reportId}")
     public ResponseEntity<ReportResponse> patchReport(
             @PathVariable Long reportId,
-            @RequestBody PatchReportRequest request) {
-        ReportResponse response = reportService.patchReport(reportId, request);
+            @RequestPart("request") PatchReportRequest request, // JSON
+            @RequestPart(value = "images", required = false) List<MultipartFile> images // 이미지들
+    ) {
+        ReportResponse response = reportService.patchReport(reportId, request, images);
         return ResponseEntity.ok(response);
     }
 

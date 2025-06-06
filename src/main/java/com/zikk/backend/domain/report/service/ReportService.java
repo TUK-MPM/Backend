@@ -19,6 +19,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -36,7 +37,9 @@ public class ReportService {
     private final ReportRepository reportRepository;
     private final S3Uploader s3Uploader;
 
-    public ReportResponse createReport(ReportRequest request) {
+    @Transactional
+    public ReportResponse createReport(ReportRequest request, List<MultipartFile> images) {
+        // 1. phone으로 유저 조회, 없으면 자동 회원가입
         User user = userRepository.findByPhone(request.getPhone())
                 .orElseGet(() -> {
                     User newUser = new User();
@@ -44,28 +47,31 @@ public class ReportService {
                     return userRepository.save(newUser);
                 });
 
+        // 2. 신고 객체 생성
         Report report = new Report();
         report.setUser(user);
         report.setLocation(request.getAddress());
         report.setReason(request.getType().name());
-        report.setStatus(ReportStatus.PENDING);
+        report.setStatus(ReportStatus.PENDING);  // 기본 상태
 
-        for (String imageUrl : request.getImageUrls()) {
-            try (InputStream in = new URL(imageUrl).openStream()) {
-                String uploadedUrl = s3Uploader.upload(in, UUID.randomUUID() + ".jpg", "report-images");
+        // 3. 이미지 처리
+        if (images != null && !images.isEmpty()) {
+            for (MultipartFile imageFile : images) {
+                try (InputStream in = imageFile.getInputStream()) {
+                    String uploadedUrl = s3Uploader.upload(in, UUID.randomUUID() + ".jpg", "report-images");
 
-                Image image = new Image();
-                image.setImageUrl(uploadedUrl);
-                image.setReport(report);
+                    Image image = new Image();
+                    image.setImageUrl(uploadedUrl);
+                    image.setReport(report); // 연관 설정
 
-                report.getImageUrls().add(image);
-            } catch (Exception e) {
-                throw new RuntimeException("이미지 업로드 실패: " + imageUrl, e);
+                    report.getImageUrls().add(image); // 양방향 연관 등록
+                } catch (Exception e) {
+                    throw new RuntimeException("이미지 업로드 실패: " + imageFile.getOriginalFilename(), e);
+                }
             }
         }
 
         Report savedReport = reportRepository.save(report);
-
         return ReportResponse.builder()
                 .reportId(savedReport.getReportId())
                 .message("신고가 정상적으로 접수되었습니다.")
@@ -77,14 +83,14 @@ public class ReportService {
     }
 
     @Transactional
-    public ReportResponse patchReport(Long reportId, PatchReportRequest request) {
+    public ReportResponse patchReport(Long reportId, PatchReportRequest request, List<MultipartFile> images) {
         Report report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new NoSuchElementException("해당 신고가 존재하지 않습니다."));
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Object principal = authentication.getPrincipal();
 
-        // ✅ 관리자일 경우: 상태만 수정 가능
+        // ✅ 관리자 → 상태(status)만 수정, images는 무시
         if (principal instanceof Admin) {
             if (request.getStatus() != null) {
                 report.setStatus(request.getStatus());
@@ -102,13 +108,14 @@ public class ReportService {
             }
         }
 
-        // ✅ 일반 유저일 경우: 자신의 신고만 수정 가능
+        // ✅ 일반 유저 → 본인 신고 수정 (내용 + 이미지)
         if (principal instanceof User user) {
             // 권한 체크
             if (!report.getUser().getUserId().equals(user.getUserId())) {
                 throw new SecurityException("본인의 신고만 수정할 수 있습니다.");
             }
 
+            // phone 수정
             if (request.getPhone() != null) {
                 User updateUser = userRepository.findByPhone(request.getPhone())
                         .orElseGet(() -> {
@@ -119,41 +126,51 @@ public class ReportService {
                 report.setUser(updateUser);
             }
 
+            // address 수정
             if (request.getAddress() != null) {
                 report.setLocation(request.getAddress());
             }
 
+            // status 수정
             if (request.getStatus() != null) {
-                report.setReason(request.getStatus().name());
+                report.setStatus(request.getStatus());
+                report.setRepliedAt(LocalDateTime.now());
             }
 
-            if (request.getImageUrls() != null) {
+            // images 수정 (User만 가능)
+            if (images != null) {
+                // 기존 이미지 clear 후 새로 추가
                 report.getImageUrls().clear();
 
-                for (String imageUrl : request.getImageUrls()) {
-                    try (InputStream in = new URL(imageUrl).openStream()) {
+                for (MultipartFile imageFile : images) {
+                    try (InputStream in = imageFile.getInputStream()) {
                         String uploadedUrl = s3Uploader.upload(in, UUID.randomUUID() + ".jpg", "report-images");
 
                         Image image = new Image();
                         image.setImageUrl(uploadedUrl);
                         image.setReport(report);
+
                         report.getImageUrls().add(image);
                     } catch (Exception e) {
-                        throw new RuntimeException("이미지 업로드 실패: " + imageUrl, e);
+                        throw new RuntimeException("이미지 업로드 실패: " + imageFile.getOriginalFilename(), e);
                     }
                 }
             }
 
+            // 응답
             return ReportResponse.builder()
                     .reportId(report.getReportId())
                     .message("신고가 정상적으로 수정되었습니다.")
+                    .reason(report.getReason())
+                    .status(report.getStatus())
+                    .createdAt(report.getCreatedAt())
+                    .repliedAt(report.getRepliedAt())
                     .build();
         }
 
-        // 🔐 인증된 사용자(User/Admin)가 아니라면 차단
+        // 인증 안된 사용자
         throw new SecurityException("유효하지 않은 사용자입니다.");
     }
-
 
     @Transactional(readOnly = true)
     public List<ReportResponse> getReportsByUser(User user) {
