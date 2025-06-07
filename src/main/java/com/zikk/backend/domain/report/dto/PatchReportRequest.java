@@ -13,6 +13,7 @@ public class PatchReportRequest {
     private String phone;
     private String address;
     private ReportStatus status;
+    private ReportType reportType;
     private List<String> imageUrls;
 }
 

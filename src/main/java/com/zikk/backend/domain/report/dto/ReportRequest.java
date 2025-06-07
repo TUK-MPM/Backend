@@ -11,6 +11,6 @@ import java.util.List;
 public class ReportRequest {
     private String phone;
     private String address;
-    private ReportType type;
+    private ReportType reportType;
     private List<String> imageUrls;
 }

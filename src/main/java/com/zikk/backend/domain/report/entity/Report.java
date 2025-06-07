@@ -3,6 +3,7 @@ package com.zikk.backend.domain.report.entity;
 import com.zikk.backend.domain.admin.entity.Admin;
 import com.zikk.backend.domain.image.entity.Image;
 import com.zikk.backend.domain.report.enums.ReportStatus;
+import com.zikk.backend.domain.report.enums.ReportType;
 import com.zikk.backend.domain.user.entity.User;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -31,7 +32,8 @@ public class Report {
 
     private String location;
 
-    private String reason;
+    @Enumerated(EnumType.STRING)
+    private ReportType reportType;
 
     @Enumerated(EnumType.STRING)
     private ReportStatus status = ReportStatus.PENDING;
@@ -47,8 +49,6 @@ public class Report {
     @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Image> imageUrls = new ArrayList<>();
 
-    private String content; // 신고 내용 (선택 입력)
-    private String reply; // 관리자 답변
     private LocalDateTime repliedAt; // 답변 시각
 }
 

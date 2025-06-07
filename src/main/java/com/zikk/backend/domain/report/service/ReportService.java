@@ -51,7 +51,7 @@ public class ReportService {
         Report report = new Report();
         report.setUser(user);
         report.setLocation(request.getAddress());
-        report.setReason(request.getType().name());
+        report.setReportType(request.getReportType());
         report.setStatus(ReportStatus.PENDING);  // 기본 상태
 
         // 3. 이미지 처리
@@ -75,10 +75,10 @@ public class ReportService {
         return ReportResponse.builder()
                 .reportId(savedReport.getReportId())
                 .message("신고가 정상적으로 접수되었습니다.")
-                .reason(savedReport.getReason())
+                .reason(savedReport.getReportType().name())
                 .status(savedReport.getStatus())
+                .address(savedReport.getLocation())
                 .createdAt(savedReport.getCreatedAt())
-                .repliedAt(savedReport.getRepliedAt())
                 .build();
     }
 
@@ -90,32 +90,32 @@ public class ReportService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Object principal = authentication.getPrincipal();
 
-        // ✅ 관리자 → 상태(status)만 수정, images는 무시
+        // ✅ 관리자 → status만 수정
         if (principal instanceof Admin) {
+            boolean updated = false;
+
             if (request.getStatus() != null) {
                 report.setStatus(request.getStatus());
                 report.setRepliedAt(LocalDateTime.now());
-                return ReportResponse.builder()
-                        .reportId(report.getReportId())
-                        .message("신고 상태가 관리자에 의해 변경되었습니다.")
-                        .reason(report.getReason())
-                        .status(report.getStatus())
-                        .createdAt(report.getCreatedAt())
-                        .repliedAt(report.getRepliedAt())
-                        .build();
-            } else {
-                throw new IllegalArgumentException("상태(status)는 필수 입력입니다.");
+                updated = true;
             }
+
+            if (!updated) {
+                throw new IllegalArgumentException("수정할 값이 필요합니다.");
+            }
+
+            return ReportResponse.builder()
+                    .reportId(report.getReportId())
+                    .message("신고가 정상적으로 수정되었습니다.")
+                    .build();
         }
 
-        // ✅ 일반 유저 → 본인 신고 수정 (내용 + 이미지)
+        // ✅ 일반 유저 → phone, location, reportType, images만 수정
         if (principal instanceof User user) {
-            // 권한 체크
             if (!report.getUser().getUserId().equals(user.getUserId())) {
                 throw new SecurityException("본인의 신고만 수정할 수 있습니다.");
             }
 
-            // phone 수정
             if (request.getPhone() != null) {
                 User updateUser = userRepository.findByPhone(request.getPhone())
                         .orElseGet(() -> {
@@ -126,20 +126,15 @@ public class ReportService {
                 report.setUser(updateUser);
             }
 
-            // address 수정
             if (request.getAddress() != null) {
                 report.setLocation(request.getAddress());
             }
 
-            // status 수정
-            if (request.getStatus() != null) {
-                report.setStatus(request.getStatus());
-                report.setRepliedAt(LocalDateTime.now());
+            if (request.getReportType() != null) {
+                report.setReportType(request.getReportType());
             }
 
-            // images 수정 (User만 가능)
             if (images != null) {
-                // 기존 이미지 clear 후 새로 추가
                 report.getImageUrls().clear();
 
                 for (MultipartFile imageFile : images) {
@@ -157,18 +152,12 @@ public class ReportService {
                 }
             }
 
-            // 응답
             return ReportResponse.builder()
                     .reportId(report.getReportId())
                     .message("신고가 정상적으로 수정되었습니다.")
-                    .reason(report.getReason())
-                    .status(report.getStatus())
-                    .createdAt(report.getCreatedAt())
-                    .repliedAt(report.getRepliedAt())
                     .build();
         }
 
-        // 인증 안된 사용자
         throw new SecurityException("유효하지 않은 사용자입니다.");
     }
 
@@ -179,7 +168,7 @@ public class ReportService {
         return reports.stream()
                 .map(report -> ReportResponse.builder()
                         .reportId(report.getReportId())
-                        .reason(report.getReason())
+                        .reason(report.getReportType().name())
                         .status(report.getStatus())
                         .address(report.getLocation())
                         .createdAt(report.getCreatedAt())
@@ -205,7 +194,7 @@ public class ReportService {
 
         return ReportResponse.builder()
                 .reportId(report.getReportId())
-                .reason(report.getReason())
+                .reason(report.getReportType().name())
                 .status(report.getStatus())
                 .createdAt(report.getCreatedAt())
                 .repliedAt(report.getRepliedAt())
@@ -234,7 +223,7 @@ public class ReportService {
         return ReportDetailResponse.builder()
                 .number(report.getUser().getPhone())
                 .reportId("rep_" + report.getCreatedAt().toLocalDate().toString().replaceAll("-", "") + "_" + String.format("%03d", report.getReportId()))
-                .where(ReportType.valueOf(report.getReason()))
+                .reportType(report.getReportType())
                 .address(report.getLocation())
                 .mediaUrls(report.getImageUrls().stream()
                         .map(image -> image.getImageUrl())
@@ -251,7 +240,7 @@ public class ReportService {
         return reports.stream()
                 .map(report -> ReportResponse.builder()
                         .reportId(report.getReportId())
-                        .reason(report.getReason())
+                        .reason(report.getReportType().name())
                         .status(report.getStatus())
                         .address(report.getLocation())
                         .createdAt(report.getCreatedAt())
