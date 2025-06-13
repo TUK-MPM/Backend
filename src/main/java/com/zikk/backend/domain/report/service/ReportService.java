@@ -2,6 +2,8 @@ package com.zikk.backend.domain.report.service;
 
 import com.zikk.backend.domain.admin.entity.Admin;
 import com.zikk.backend.domain.image.entity.Image;
+import com.zikk.backend.domain.inquiries.enums.InquiryStatus;
+import com.zikk.backend.domain.inquiries.repository.InquiriesRepository;
 import com.zikk.backend.domain.report.dto.PatchReportRequest;
 import com.zikk.backend.domain.report.dto.ReportDetailResponse;
 import com.zikk.backend.domain.report.dto.ReportRequest;
@@ -24,9 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStream;
 import java.net.URL;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +36,7 @@ public class ReportService {
     private final UserRepository userRepository;
     private final ReportRepository reportRepository;
     private final S3Uploader s3Uploader;
+    private final InquiriesRepository inquiriesRepository;
 
     @Transactional
     public ReportResponse createReport(ReportRequest request, List<MultipartFile> images) {
@@ -247,5 +248,31 @@ public class ReportService {
                         .repliedAt(report.getRepliedAt())
                         .build())
                 .toList();
+    }
+
+    public Map<String, Object> getStatistics() {
+        long totalReportCount = reportRepository.count();
+        long pendingReportCount = reportRepository.countByStatus(ReportStatus.PENDING);
+
+        long totalInquiryCount = inquiriesRepository.count();
+        long pendingInquiryCount = inquiriesRepository.countByStatus(InquiryStatus.WAITING);
+
+        List<Object[]> reportTypeCounts = reportRepository.countReportsByType();
+        Map<String, Long> reportTypes = new HashMap<>();
+
+        for (Object[] row : reportTypeCounts) {
+            String type = row[0].toString(); // Enum → String
+            Long count = (Long) row[1];
+            reportTypes.put(type, count);
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("totalReportCount", totalReportCount);
+        result.put("pendingReportCount", pendingReportCount);
+        result.put("totalInquiryCount", totalInquiryCount);
+        result.put("pendingInquiryCount", pendingInquiryCount);
+        result.put("reportTypes", reportTypes);
+
+        return result;
     }
 }

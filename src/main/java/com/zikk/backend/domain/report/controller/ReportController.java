@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -75,5 +76,10 @@ public class ReportController {
             @AuthenticationPrincipal User user) {
         ReportDetailResponse response = reportService.getReportDetail(reportId, user);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/statistics")
+    public Map<String, Object> getStatistics() {
+        return reportService.getStatistics();
     }
 }
