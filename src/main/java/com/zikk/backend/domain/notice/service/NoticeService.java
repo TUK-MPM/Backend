@@ -99,7 +99,8 @@ public class NoticeService {
         return new NoticeDetailResponse(
                 notice.getNotiId(),
                 notice.getTitle(),
-                notice.getContent()
+                notice.getContent(),
+                notice.getCreatedAt()
         );
     }
 
