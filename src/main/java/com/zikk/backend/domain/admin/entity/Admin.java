@@ -20,6 +20,7 @@ public class Admin {
     private Long adminId;
 
     private String phone;
+    private String password;
 
     @CreatedDate
     @Column(updatable = false)
