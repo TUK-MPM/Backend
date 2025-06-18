@@ -16,6 +16,7 @@ import com.zikk.backend.domain.user.entity.User;
 import com.zikk.backend.domain.user.repository.UserRepository;
 import com.zikk.backend.global.S3Uploader;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -274,5 +275,27 @@ public class ReportService {
         result.put("reportTypes", reportTypes);
 
         return result;
+    }
+
+    @Transactional(readOnly = true)
+    public List<ReportDetailResponse> getRecentExamples() {
+        List<Report> reports = reportRepository.findByStatusOrderByCreatedAtDesc(
+                ReportStatus.APPROVED, Pageable.ofSize(3));
+
+        return reports.stream()
+                .map(report -> ReportDetailResponse.builder()
+                        .number(report.getUser().getPhone())
+                        .reportId("rep_" + report.getCreatedAt().toLocalDate().toString().replaceAll("-", "")
+                                + "_" + String.format("%03d", report.getReportId()))
+                        .reportType(report.getReportType())
+                        .address(report.getLocation())
+                        .mediaUrls(report.getImageUrls().stream()
+                                .map(Image::getImageUrl)
+                                .toList())
+                        .status(report.getStatus())
+                        .createdAt(report.getCreatedAt())
+                        .repliedAt(report.getRepliedAt())
+                        .build())
+                .toList();
     }
 }

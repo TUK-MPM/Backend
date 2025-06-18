@@ -82,4 +82,9 @@ public class ReportController {
     public Map<String, Object> getStatistics() {
         return reportService.getStatistics();
     }
+
+    @GetMapping("/examples")
+    public List<ReportDetailResponse> getRecentExamples() {
+        return reportService.getRecentExamples();
+    }
 }
